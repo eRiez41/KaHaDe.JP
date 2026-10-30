@@ -1,0 +1,4 @@
+Kalau mau matikan tunnel:
+kill 126718
+Kalau mau nyalakan lagi:
+ngrok http 5173

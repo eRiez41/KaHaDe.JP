@@ -1,0 +1,11 @@
+.env
+.env.local
+node_modules/
+storage/
+data/
+*.db
+*.db-journal
+backend/bin/
+frontend/dist/
+frontend/static/dict/
+.DS_Store
