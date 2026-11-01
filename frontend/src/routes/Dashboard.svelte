@@ -14,17 +14,35 @@
   let downloadingId = $state(null)
   const isAdmin = $derived(auth.isAdmin)
 
+  const numberFormat = new Intl.NumberFormat('id-ID')
+
   const babs = $derived(babStore.items)
   const totalBab = $derived(babs.length)
   const totalKata = $derived(babs.reduce((sum, bab) => sum + bab.countKosakata, 0))
   const totalAudio = $derived(babs.reduce((sum, bab) => sum + bab.audioReadyCount, 0))
-  const audioPercent = $derived(totalKata ? Math.round((totalAudio / totalKata) * 100) : 0)
+  const audioRatio = $derived(totalKata ? (totalAudio / totalKata) * 100 : 0)
+  const audioPercent = $derived(
+    totalKata === 0 || totalAudio === totalKata
+      ? Math.round(audioRatio)
+      : Math.round(audioRatio * 10) / 10,
+  )
+  const audioPercentLabel = $derived(
+    Number.isInteger(audioPercent) ? String(audioPercent) : audioPercent.toFixed(1).replace('.', ','),
+  )
+
+  const sortedBabs = $derived(
+    [...babs].sort((a, b) =>
+      String(a.nama).localeCompare(String(b.nama), 'id', { numeric: true }),
+    ),
+  )
 
   const recentBabs = $derived(
     [...babs]
       .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))
       .slice(0, 3),
   )
+
+  const formatNumber = (value) => numberFormat.format(value ?? 0)
 
   onMount(() => {
     loadBabs()
@@ -118,7 +136,7 @@
       <article class="card p-5">
         <p class="text-label-lg text-on-surface-variant">Total Bab</p>
         <p class="mt-1 text-display-sm font-bold tabular-nums">
-          {babStore.status === 'loading' && totalBab === 0 ? '—' : totalBab}
+          {babStore.status === 'loading' && totalBab === 0 ? '—' : formatNumber(totalBab)}
         </p>
         <p class="mt-1 text-label-md text-on-surface-variant">Bab tersimpan</p>
       </article>
@@ -126,23 +144,45 @@
       <article class="card p-5">
         <p class="text-label-lg text-on-surface-variant">Total Kata</p>
         <p class="mt-1 text-display-sm font-bold tabular-nums">
-          {babStore.status === 'loading' && totalKata === 0 ? '—' : totalKata}
+          {babStore.status === 'loading' && totalKata === 0 ? '—' : formatNumber(totalKata)}
         </p>
-        <p class="mt-1 text-label-md text-on-surface-variant">Kosakata Jepang</p>
+        <p class="mt-1 text-label-md text-on-surface-variant">
+          Kosakata Jepang dari {formatNumber(totalBab)} bab
+        </p>
       </article>
 
       <article class="card p-5">
         <p class="text-label-lg text-on-surface-variant">Audio Siap</p>
         <p class="mt-1 text-display-sm font-bold tabular-nums">
-          {audioPercent}%<span class="ml-1 text-title-md font-medium text-on-surface-variant">
-            {totalAudio}/{totalKata}
+          {audioPercentLabel}%<span class="ml-1 text-title-md font-medium text-on-surface-variant">
+            {formatNumber(totalAudio)}/{formatNumber(totalKata)}
           </span>
         </p>
         <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-high" aria-hidden="true">
-          <div class="h-full rounded-full bg-primary" style={`width: ${audioPercent}%`}></div>
+          <div class="h-full rounded-full bg-primary" style={`width: ${audioRatio}%`}></div>
         </div>
       </article>
     </div>
+
+    {#if babs.length > 0}
+      <details class="rounded-lg border border-outline-variant/60 bg-surface-container/40 px-4 py-3">
+        <summary class="cursor-pointer text-label-lg text-on-surface-variant">
+          Rincian {formatNumber(totalBab)} bab ({formatNumber(totalKata)} kata)
+        </summary>
+        <ul class="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2 lg:grid-cols-3">
+          {#each sortedBabs as bab (bab.id)}
+            <li class="flex items-baseline justify-between gap-3 text-label-md">
+              <a href={`#bab/${bab.id}`} class="truncate text-on-surface hover:text-primary">
+                {bab.nama}
+              </a>
+              <span class="shrink-0 tabular-nums text-on-surface-variant">
+                {formatNumber(bab.countKosakata)} kata · {formatNumber(bab.audioReadyCount)} audio
+              </span>
+            </li>
+          {/each}
+        </ul>
+      </details>
+    {/if}
 
     <section class="space-y-3" aria-labelledby="quick-actions">
       <h2 id="quick-actions" class="text-title-md">Quick Actions</h2>
@@ -209,14 +249,16 @@
                   {bab.nama}
                 </a>
                 <span class="chip shrink-0 bg-surface-high text-on-surface-variant tabular-nums">
-                  {bab.countKosakata}
+                  {formatNumber(bab.countKosakata)}
                 </span>
               </div>
 
               <div class="space-y-1.5">
                 <div class="flex items-center justify-between text-label-md text-on-surface-variant">
                   <span>Audio</span>
-                  <span class="tabular-nums">{bab.audioReadyCount}/{bab.countKosakata}</span>
+                  <span class="tabular-nums">
+                    {formatNumber(bab.audioReadyCount)}/{formatNumber(bab.countKosakata)}
+                  </span>
                 </div>
                 <div class="h-1.5 overflow-hidden rounded-full bg-surface-high" aria-hidden="true">
                   <div class="h-full rounded-full bg-primary" style={`width: ${percent(bab)}%`}></div>
