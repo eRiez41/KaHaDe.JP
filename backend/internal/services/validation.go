@@ -65,6 +65,35 @@ func validateBabPatch(nama *string) (string, *ValidationError) {
 	return validateBabName(*nama)
 }
 
+func validateLessonName(nama string) (string, *ValidationError) {
+	normalized := normalizeText(nama)
+
+	if normalized == "" {
+		return "", &ValidationError{Fields: []FieldError{
+			{Field: "nama", Message: "Nama lesson wajib diisi"},
+		}}
+	}
+	if utf8.RuneCountInString(normalized) > MAX_BAB_NAME_LENGTH {
+		return "", &ValidationError{Fields: []FieldError{
+			{
+				Field:   "nama",
+				Message: fmt.Sprintf("Nama lesson maksimal %d karakter", MAX_BAB_NAME_LENGTH),
+			},
+		}}
+	}
+
+	return normalized, nil
+}
+
+func validateLessonPatch(nama *string) (string, *ValidationError) {
+	if nama == nil {
+		return "", &ValidationError{Fields: []FieldError{
+			{Field: "nama", Message: "Minimal satu field harus diisi"},
+		}}
+	}
+	return validateLessonName(*nama)
+}
+
 func validateKosakata(input KosakataInput) (KosakataInput, *ValidationError) {
 	normalized := KosakataInput{
 		Kanji:  normalizeText(input.Kanji),

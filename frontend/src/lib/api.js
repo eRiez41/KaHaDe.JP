@@ -113,3 +113,20 @@ export const updateKosakata = (id, data) =>
 export const deleteKosakata = (id) => request(`/api/kosakata/${id}`, { method: 'DELETE' })
 export const importKosakata = (babId, kosakata) =>
   request(`/api/bab/${babId}/import`, { method: 'POST', body: { kosakata } })
+
+export const getLessons = () => request('/api/lessons')
+export const createLesson = (data) => request('/api/lessons', { method: 'POST', body: data })
+export const updateLesson = (id, data) =>
+  request(`/api/lessons/${id}`, { method: 'PATCH', body: data })
+export const deleteLesson = (id) => request(`/api/lessons/${id}`, { method: 'DELETE' })
+
+export const getKanjiLessons = (lessonId) =>
+  request(`/api/kanji-lessons${lessonId ? `?lessonId=${lessonId}` : ''}`)
+export const createKanjiLesson = (data) =>
+  request('/api/kanji-lessons', { method: 'POST', body: data })
+export const updateKanjiLesson = (id, data) =>
+  request(`/api/kanji-lessons/${id}`, { method: 'PATCH', body: data })
+export const deleteKanjiLesson = (id) =>
+  request(`/api/kanji-lessons/${id}`, { method: 'DELETE' })
+export const importKanjiLessons = (lessonId, items) =>
+  request('/api/kanji-lessons/import', { method: 'POST', body: { lessonId, items } })

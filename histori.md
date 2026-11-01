@@ -1,6 +1,6 @@
 # Histori Pengerjaan — Menu Perubahan Kata
 
-Terakhir diperbarui: 30 Oktober 2026
+Terakhir diperbarui: 1 November 2026
 
 ## Ringkasan
 
@@ -8,12 +8,94 @@ Seluruh 15 item roadmap di menu **Perubahan Kata** sudah aktif dan dapat dipakai
 
 Semua input divalidasi ke kamus backend (`/api/lookup`). Kata yang tidak ada di kamus ditolak dengan pesan yang jelas, dan setiap bentuk yang ditampilkan punya arti Indonesianya sendiri (bukan satu arti untuk semua baris).
 
+Mulai 1 November 2026, menu **Kanji** dipecah menjadi dua sub-menu: **Kanji dari Bab** (rekap lama) dan **Kanji Lesson** (bank kanji mandiri), masing-masing dengan **flashcard** otomatis. Detailnya ada di bagian *Update 1 November 2026* di bawah.
+
 Status akhir:
 
 - `npm run build` lolos.
 - Uji matriks konjugasi: 0 kegagalan (lebih dari 100 kombinasi kata × modul).
 - Uji UI end-to-end: 28 kasus sukses + 5 kasus penolakan, 0 kegagalan, 0 error console.
 - Backend, Vite, dan ngrok berjalan normal.
+
+## Update 1 November 2026 — Menu Kanji: Bab & Lesson
+
+### Yang berubah
+
+- Menu **Kanji** sekarang punya dua sub-menu dengan judul yang lebih jelas:
+  - **Kanji dari Bab — Rekap otomatis dari kosakata.** Perilaku lama dipertahankan: filter bab, mode **Kata** / **Karakter**, pagination, dan modal contoh kata.
+  - **Kanji Lesson — Bank kanji mandiri.** Data terpisah dari kosakata bab dengan field `kanji`, `hira` / `kata`, `romaji`, dan `arti`.
+- **Kanji Lesson** mendukung tambah, edit, hapus, pencarian, pagination, dan import JSON. Kontrol tulis hanya muncul untuk admin, konsisten dengan halaman lain.
+- **Flashcard** tersedia di kedua sub-menu dan dibuat otomatis dari data yang sedang aktif:
+  - kartu depan menampilkan kanji, kartu belakang menampilkan hira, romaji, arti, dan bab (bila ada);
+  - tombol sebelumnya/berikutnya, balik kartu, acak, dan ulang;
+  - navigasi keyboard `←` `→`, balik kartu dengan spasi, tutup dengan `Esc`;
+  - progress bar dan indikator posisi kartu.
+
+### Backend
+
+- Migrasi baru `backend/internal/db/migration/0002_kanji_lesson.sql` membuat tabel `kanji_lesson` + index pada kolom `kanji`.
+- Model, repository, service, dan handler baru:
+  - `backend/internal/models/kanji_lesson.go`
+  - `backend/internal/db/kanji_lesson.go`
+  - `backend/internal/services/kanji_lesson.go`
+  - `backend/internal/handlers/kanji_lesson.go`
+- Endpoint baru di bawah `/api`:
+  - `GET /kanji-lessons`
+  - `POST /kanji-lessons`
+  - `POST /kanji-lessons/import`
+  - `PATCH /kanji-lessons/:id`
+  - `DELETE /kanji-lessons/:id`
+- Validasi lesson memakai aturan kosakata yang sudah ada (kanji & arti wajib, batas panjang field). Import maksimal 500 baris, baris tidak valid dilewati dan dilaporkan per baris.
+- `RegisterRoutes`, `main.go`, dan setup test diperbarui. `go test ./...` lolos, termasuk test CRUD, import, dan validasi lesson.
+
+### Frontend
+
+- `frontend/src/routes/Kanji.svelte` dirampingkan menjadi tab host; isi tiap sub-menu dipindah ke komponen terpisah agar tetap di bawah 200 baris per komponen.
+- Komponen baru di `frontend/src/components/kanji/`:
+  - `KanjiBabPanel.svelte`, `KanjiBabToolbar.svelte`, `KanjiBabWordTable.svelte`, `KanjiBabCharTable.svelte`
+  - `KanjiLessonPanel.svelte`, `KanjiLessonToolbar.svelte`, `KanjiLessonTable.svelte`, `KanjiLessonFormModal.svelte`, `KanjiLessonImportModal.svelte`
+  - `KanjiFlashcards.svelte`, `KanjiFlashcardFace.svelte`
+- API client baru di `frontend/src/lib/api.js`: `getKanjiLessons`, `createKanjiLesson`, `updateKanjiLesson`, `deleteKanjiLesson`, `importKanjiLessons`.
+- Import lesson memakai ulang shell, upload, preview, progress, dan result yang sudah ada:
+  - `ImportUploadStep` sekarang menerima `template`, `templateFileName`, dan `placeholder`;
+  - `ImportPreviewStep` dan `ImportResultStep` menerima `noun` agar teks menjadi “Import 1 Kanji” / “1 kanji berhasil di-import”;
+  - `prepareImportRows` menerima `existingLabel` untuk pesan duplikat yang sesuai konteks.
+- `extractImportItems` menerima array langsung atau objek dengan field `kosakata`, `items`, `kanjiLessons`, atau `lessons`.
+
+### Pengujian
+
+- `npm run build` lolos.
+- Uji API langsung: create, list, update, import (1 valid + 1 invalid), delete, dan validasi 400 berjalan sesuai harapan. Data uji dihapus kembali sehingga tabel lesson bersih.
+- Uji UI end-to-end dengan Chrome headless + CDP, semua lolos:
+  - dua tab Kanji tampil dan data bab termuat (835 kata ber-kanji dari 1.169 kata);
+  - flashcard bab bisa dibuka, dibalik, dan ditutup;
+  - mode admin memunculkan kontrol Lesson;
+  - tambah, edit, hapus kanji lesson lewat UI berhasil;
+  - import JSON lesson sampai selesai dan data muncul di tabel;
+  - flashcard lesson terbuka dari data lesson;
+  - layout mobile 390 px tidak meluber horizontal;
+  - tidak ada error console selama pengujian.
+
+### Grup Lesson (lanjutan)
+
+- **Kanji Lesson** sekarang dikelompokkan per lesson bernama: **Lesson 1..N**. User membuat lesson dulu, lalu menambahkan atau meng-import kanji ke dalamnya.
+- Migrasi `backend/internal/db/migration/0003_lesson_group.sql` membuat tabel `lesson`, menambah kolom `kanji_lesson.lesson_id` + index, dan memindahkan entri lama tanpa grup ke **Lesson 1** agar data lama tidak hilang.
+- Model, repository, service, dan handler baru: `models/lesson.go`, `db/lesson.go`, `services/lesson.go`, `handlers/lesson.go`.
+- Endpoint grup lesson:
+  - `GET /lessons` — daftar lesson + `countKanji`;
+  - `POST /lessons` — buat lesson;
+  - `PATCH /lessons/:id` — rename lesson;
+  - `DELETE /lessons/:id` — hapus lesson beserta seluruh kanji di dalamnya (cascade eksplisit dalam transaksi).
+- `GET /kanji-lessons?lessonId=` memfilter entri per lesson. Create/update/import memvalidasi `lessonId`; import menerima `lessonId` di level request atau per baris.
+- Dropdown **Semua Lesson + Lesson 1..N** di halaman Kanji Lesson menampilkan jumlah kanji per lesson. Kolom **Lesson** hanya muncul saat **Semua Lesson** dipilih.
+- Form **Tambah Kanji** punya selector lesson tujuan (default mengikuti lesson aktif), dan tombol **Import JSON** nonaktif saat **Semua Lesson** dipilih agar import selalu jelas targetnya.
+- Rename dan hapus lesson tersedia untuk admin lewat toolbar. Flashcard memakai data lesson aktif dan judulnya menyebut nama lesson.
+- State dan aksi lesson dipisah ke `frontend/src/lib/kanji-lesson-store.svelte.js` dan `frontend/src/lib/kanji-lesson-actions.js`; komponen dipecah lagi (`KanjiLessonContent`, `KanjiLessonModals`, `KanjiLessonFields`) agar semuanya tetap di bawah 200 baris.
+
+### Catatan desain
+
+- Grup lesson memakai relasi `kanji_lesson.lesson_id`; entri lama dimigrasikan ke **Lesson 1** agar tetap terlihat.
+- Flashcard memakai data yang sedang aktif: hasil filter bab di sub-menu Bab, dan hasil filter lesson + pencarian di sub-menu Lesson.
 
 ## Status Roadmap
 
@@ -98,6 +180,7 @@ Setiap modul menampilkan:
 - Navigasi antar modul memakai key per sub-route sehingga hasil modul sebelumnya tidak tertinggal.
 - **Splash screen pembuka** di `index.html`: logo + animasi bar singkat yang memudar setelah aplikasi siap (menghormati `prefers-reduced-motion`).
 - **Tabel subab mengikuti baris yang sedang diputar.** Saat Play All berjalan, tabel otomatis menggulir agar baris aktif tetap terlihat. Hanya area tabel yang bergulir (bukan halaman), posisi sticky header diperhitungkan, dan animasi dimatikan bila `prefers-reduced-motion` aktif. Helper-nya ada di `frontend/src/lib/scroll-active-row.js`.
+- **Dashboard dibuat transparan soal total.** Angka memakai pemisah ribuan (mis. 1.169), persentase audio tidak lagi dibulatkan menjadi 100% saat masih ada audio yang kurang (mis. 99,8%), dan ada panel **Rincian 20 bab** berisi jumlah kata/audio per bab. Total dashboard memang penjumlahan seluruh bab; datanya sudah dicocokkan dengan isi database (20 bab, 1.169 kata, 1.167 audio).
 - **Tulisan “Lewati ke konten” tidak lagi berkedip saat reload.** Penyebabnya adalah tautan skip-to-content tampil tanpa gaya sebelum Tailwind dimuat. Sekarang gayanya ditulis inline di `index.html` sehingga tetap tersembunyi, dan hanya muncul saat difokuskan dengan keyboard.
 
 ### 7. Kanji dan backend
@@ -225,5 +308,10 @@ ngrok http 5173
 | `frontend/src/lib/conjugation/validateAdjective.js` | Validasi kelas kata adjektiva |
 | `frontend/src/components/ubah-kata/VerbFormExplanation.svelte` | Penjelasan generik |
 | `frontend/src/components/ubah-kata/VerbFormResult.svelte` | Hasil generik |
-| `frontend/src/routes/Kanji.svelte` | Menu Kanji |
+| `frontend/src/routes/Kanji.svelte` | Host tab **Kanji dari Bab** & **Kanji Lesson** |
+| `frontend/src/components/kanji/KanjiBabPanel.svelte` | Panel rekap kanji dari kosakata bab |
+| `frontend/src/components/kanji/KanjiLessonPanel.svelte` | Panel bank kanji lesson (CRUD + import) |
+| `frontend/src/components/kanji/KanjiFlashcards.svelte` | Flashcard otomatis untuk kedua sub-menu |
+| `backend/internal/handlers/kanji_lesson.go` | Endpoint `/api/kanji-lessons` |
+| `backend/internal/db/migration/0002_kanji_lesson.sql` | Skema tabel `kanji_lesson` |
 | `backend/internal/services/dictionary.go` | Perbaikan query kamus (`strings.Clone`) |

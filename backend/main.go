@@ -77,11 +77,17 @@ func run() error {
 
 	babRepo := db.NewBabRepository(sqlDB)
 	kosakataRepo := db.NewKosakataRepository(sqlDB)
+	kanjiLessonRepo := db.NewKanjiLessonRepository(sqlDB)
+	lessonRepo := db.NewLessonRepository(sqlDB)
 
 	babHandler := handlers.NewBabHandler(services.NewBabService(babRepo))
 	kosakataHandler := handlers.NewKosakataHandler(
 		services.NewKosakataService(kosakataRepo, babRepo),
 	)
+	kanjiLessonHandler := handlers.NewKanjiLessonHandler(
+		services.NewKanjiLessonService(kanjiLessonRepo, lessonRepo),
+	)
+	lessonHandler := handlers.NewLessonHandler(services.NewLessonService(lessonRepo))
 	audioService := services.NewAudioService(
 		kosakataRepo,
 		services.NewEdgeTTS(cfg.TTSTimeout),
@@ -115,7 +121,7 @@ func run() error {
 		MaxAge:       3600,
 	}))
 
-	handlers.RegisterRoutes(app.Group("/api"), babHandler, kosakataHandler, ttsHandler, exportHandler, dictionaryHandler)
+	handlers.RegisterRoutes(app.Group("/api"), babHandler, kosakataHandler, ttsHandler, exportHandler, dictionaryHandler, kanjiLessonHandler, lessonHandler)
 
 	go shutdownOnSignal(app)
 

@@ -1,0 +1,121 @@
+============================================================
+TUNGGAKAN KERJA — KaHaDe JP
+============================================================
+
+File ini adalah catatan kerja yang WAJIB di-update oleh agent.
+Berbeda dari histori.md (yang mencatat yang SUDAH selesai),
+file ini mencatat yang BELUM / SEDANG dikerjakan.
+
+Terakhir diperbarui: 1 November 2026
+
+============================================================
+ATURAN UPDATE
+============================================================
+
+1. Update file ini SETIAP KALI:
+   - Mulai mengerjakan task baru
+   - Task selesai (pindahkan ke "Menunggu Konfirmasi")
+   - Task di-commit & push (hapus dari file ini)
+   - Nemuin blocker
+   - User kasih task baru
+
+2. Jangan hapus section. Kosongkan isinya kalau gak ada item.
+
+3. Format item:
+   - [ ] Judul task singkat
+     → File terdampak: path/file.go, path/file.js
+     → Catatan: (opsional)
+
+4. Kalau section kosong, tulis "(kosong)".
+
+============================================================
+🔄 SEDANG DIKERJAKAN
+============================================================
+
+(kosong)
+
+============================================================
+⏳ TUNGGAKAN — BELUM MULAI
+============================================================
+
+(kosong)
+
+============================================================
+⏸️ MENUNGGU KONFIRMASI USER
+============================================================
+
+(sudah selesai secara teknis, tapi belum di-commit/push —
+lihat push.md untuk flow tanya-jawab)
+
+- [ ] Grup Lesson untuk Kanji Lesson (Lesson 1..N)
+  → File terdampak: backend/internal/db/migration/0002_kanji_lesson.sql,
+                    backend/internal/db/migration/0003_lesson_group.sql,
+                    backend/internal/models/kanji_lesson.go,
+                    backend/internal/models/lesson.go,
+                    backend/internal/db/kanji_lesson.go,
+                    backend/internal/db/lesson.go,
+                    backend/internal/services/kanji_lesson.go,
+                    backend/internal/services/lesson.go,
+                    backend/internal/services/validation.go,
+                    backend/internal/handlers/kanji_lesson.go,
+                    backend/internal/handlers/lesson.go,
+                    backend/internal/handlers/kanji_lesson_test.go,
+                    backend/internal/handlers/bab_test.go,
+                    backend/internal/handlers/routes.go,
+                    backend/main.go,
+                    frontend/src/lib/api.js,
+                    frontend/src/lib/import.js,
+                    frontend/src/lib/kanji-lesson-actions.js,
+                    frontend/src/lib/kanji-lesson-store.svelte.js,
+                    frontend/src/components/ImportUploadStep.svelte,
+                    frontend/src/components/ImportPreviewStep.svelte,
+                    frontend/src/components/ImportResultStep.svelte,
+                    frontend/src/components/kanji/,
+                    frontend/src/routes/Kanji.svelte,
+                    histori.md
+  → Catatan: user membuat/memilih lesson dulu, lalu menambah atau import kanji ke dalamnya. Flashcard mengikuti lesson aktif.
+  → Verifikasi: `go build`, `go vet`, `go test ./...`, `npm run build` lolos; uji API + UI (Chrome headless/CDP) lolos; layout mobile 390 px tidak meluber. Data uji sudah dibersihkan.
+  → Menunggu: user approve untuk commit + push.
+
+============================================================
+🚧 BLOCKER / CATATAN
+============================================================
+
+(kosong)
+
+============================================================
+REFERENSI
+============================================================
+
+- histori.md      → riwayat pekerjaan yang SUDAH selesai
+- push.md         → aturan kapan & bagaimana commit/push
+- rules.md        → aturan kerja agent secara umum
+- app.md          → spesifikasi UI/UX & fitur
+- tech-stack.md   → tech stack & library
+
+============================================================
+CONTOH FORMAT (hapus setelah diisi beneran)
+============================================================
+
+🔄 SEDANG DIKERJAKAN:
+- [ ] Tambah endpoint /api/lookup proxy
+  → File terdampak: backend/internal/handlers/dictionary.go,
+                    backend/internal/services/dictionary.go
+  → Catatan: butuh validasi CORS + cache 30 hari
+
+⏳ TUNGGAKAN:
+- [ ] Dialog disambiguasi kana (かえる → 帰る/変える/蛙)
+  → File terdampak: frontend/src/routes/UbahKataDetail.svelte
+  → Catatan: prioritas tinggi, UX core
+
+⏸️ MENUNGGU KONFIRMASI:
+- [ ] Test otomatis Vitest untuk conjugation
+  → File terdampak: frontend/src/lib/conjugation/*.test.js
+  → Catatan: 12 test case lolos, siap commit
+  → Menunggu: user approve untuk commit + push
+
+🚧 BLOCKER:
+- Jisho API CORS gak aktif, harus lewat backend proxy
+  → Solusi: bikin endpoint proxy di Go (sedang dikerjakan)
+
+============================================================

@@ -50,6 +50,8 @@ func newTestApp(t *testing.T, synth ...services.Synthesizer) *fiber.App {
 
 	babRepo := db.NewBabRepository(sqlDB)
 	kosakataRepo := db.NewKosakataRepository(sqlDB)
+	kanjiLessonRepo := db.NewKanjiLessonRepository(sqlDB)
+	lessonRepo := db.NewLessonRepository(sqlDB)
 
 	var ttsSynth services.Synthesizer
 	if len(synth) > 0 {
@@ -74,6 +76,8 @@ func newTestApp(t *testing.T, synth ...services.Synthesizer) *fiber.App {
 			services.NewBabService(db.NewBabRepository(sqlDB)),
 		),
 		NewDictionaryHandler(services.NewJishoDictionary(time.Second)),
+		NewKanjiLessonHandler(services.NewKanjiLessonService(kanjiLessonRepo, lessonRepo)),
+		NewLessonHandler(services.NewLessonService(lessonRepo)),
 	)
 	return app
 }

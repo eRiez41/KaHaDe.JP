@@ -7,6 +7,9 @@
     fileName = '',
     parsing = false,
     error = '',
+    template = importTemplate,
+    templateFileName = 'template-import-kosakata.json',
+    placeholder = '[{"jepang":"猫","hira":"ねこ","arti":"kucing"}]',
     onFile,
     onParse,
   } = $props()
@@ -31,7 +34,7 @@
   }
 
   function downloadTemplate() {
-    downloadJSON(importTemplate, 'template-import-kosakata.json')
+    downloadJSON(template, templateFileName)
   }
 </script>
 
@@ -68,7 +71,7 @@
       rows="8"
       spellcheck="false"
       class="field min-h-40 resize-y py-3 font-mono text-body-md"
-      placeholder={'[{"jepang":"猫","hira":"ねこ","arti":"kucing"}]'}
+      {placeholder}
     ></textarea>
   </div>
 

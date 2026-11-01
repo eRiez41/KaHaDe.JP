@@ -10,6 +10,8 @@ func RegisterRoutes(
 	tts *TTSHandler,
 	export *ExportHandler,
 	dictionary *DictionaryHandler,
+	kanjiLesson *KanjiLessonHandler,
+	lesson *LessonHandler,
 ) {
 	api.Get("/health", Health)
 
@@ -27,6 +29,17 @@ func RegisterRoutes(
 
 	api.Patch("/kosakata/:id", kosakata.Update)
 	api.Delete("/kosakata/:id", kosakata.Delete)
+
+	api.Get("/kanji-lessons", kanjiLesson.List)
+	api.Post("/kanji-lessons", kanjiLesson.Create)
+	api.Post("/kanji-lessons/import", kanjiLesson.Import)
+	api.Patch("/kanji-lessons/:id", kanjiLesson.Update)
+	api.Delete("/kanji-lessons/:id", kanjiLesson.Delete)
+
+	api.Get("/lessons", lesson.List)
+	api.Post("/lessons", lesson.Create)
+	api.Patch("/lessons/:id", lesson.Update)
+	api.Delete("/lessons/:id", lesson.Delete)
 
 	api.Post("/download/audio/:id", export.DownloadBabAudio)
 	api.Get("/export/bab/:id", export.ExportBabJSON)

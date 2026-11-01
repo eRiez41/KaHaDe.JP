@@ -1,10 +1,10 @@
 <script>
-  let { result = null, onReset, onClose } = $props()
+  let { result = null, noun = 'kata', onReset, onClose } = $props()
 </script>
 
 <div class="space-y-4 py-2">
   <div class="rounded-lg bg-status-ready/10 p-4 text-status-ready">
-    <p class="text-title-md">{result?.inserted || 0} kata berhasil di-import</p>
+    <p class="text-title-md">{result?.inserted || 0} {noun} berhasil di-import</p>
     {#if result?.skipped}
       <p class="mt-1 text-body-md">{result.skipped} baris dilewati.</p>
     {/if}

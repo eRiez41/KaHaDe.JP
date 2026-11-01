@@ -11,17 +11,21 @@ export const importTemplate = [
   { jepang: '食べる', hira: 'たべる', romaji: 'taberu', arti: 'makan' },
 ]
 
+export const kanjiLessonTemplate = [
+  { kanji: '日', hira: 'ひ', romaji: 'hi', arti: 'matahari / hari' },
+  { kanji: '学校', hira: 'がっこう', romaji: 'gakkou', arti: 'sekolah' },
+]
+
 export function extractImportItems(parsed) {
   if (Array.isArray(parsed)) {
     return parsed
   }
-  if (Array.isArray(parsed?.kosakata)) {
-    return parsed.kosakata
+  for (const key of ['kosakata', 'items', 'kanjiLessons', 'lessons']) {
+    if (Array.isArray(parsed?.[key])) {
+      return parsed[key]
+    }
   }
-  if (Array.isArray(parsed?.items)) {
-    return parsed.items
-  }
-  throw new Error('Format JSON tidak dikenali. Gunakan array atau objek dengan field kosakata.')
+  throw new Error('Format JSON tidak dikenali. Gunakan array atau objek dengan field items.')
 }
 
 export function parseImportText(text) {
@@ -72,7 +76,8 @@ function pushMessage(row, level, message) {
   }
 }
 
-export async function prepareImportRows(rawItems, existingItems = []) {
+export async function prepareImportRows(rawItems, existingItems = [], options = {}) {
+  const existingLabel = options.existingLabel || 'bab ini'
   if (!Array.isArray(rawItems) || rawItems.length === 0) {
     throw new Error('Tidak ada baris untuk di-import.')
   }
@@ -146,7 +151,7 @@ export async function prepareImportRows(rawItems, existingItems = []) {
       }
       if (existingKeys.has(key)) {
         row.duplicate = true
-        pushMessage(row, 'warning', 'Sudah ada di bab ini.')
+        pushMessage(row, 'warning', `Sudah ada di ${existingLabel}.`)
       }
     }
 

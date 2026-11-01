@@ -1,7 +1,7 @@
 <script>
   import { selectedPayload, summarizeRows } from '../lib/import.js'
 
-  let { rows = [], onToggleRow, onToggleAll, onImport, onBack } = $props()
+  let { rows = [], noun = 'Kata', onToggleRow, onToggleAll, onImport, onBack } = $props()
 
   let filter = $state('all')
 
@@ -115,7 +115,7 @@
       disabled={summary.selected === 0}
       onclick={() => onImport(selectedPayload(rows))}
     >
-      Import {summary.selected} Kata
+      Import {summary.selected} {noun}
     </button>
   </div>
 </div>
