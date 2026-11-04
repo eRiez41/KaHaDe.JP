@@ -97,6 +97,37 @@ Status akhir:
 - Grup lesson memakai relasi `kanji_lesson.lesson_id`; entri lama dimigrasikan ke **Lesson 1** agar tetap terlihat.
 - Flashcard memakai data yang sedang aktif: hasil filter bab di sub-menu Bab, dan hasil filter lesson + pencarian di sub-menu Lesson.
 
+## Update 4 November 2026 — Audio di Kanji Lesson
+
+### Yang berubah
+
+- Sub-menu **Kanji Lesson** sekarang punya audio seperti menu Bab: **Play All**, **Generate All** (khusus admin), **Download Audio**, dan tombol putar/generate per baris.
+- Setiap entri kanji lesson menyimpan dua MP3: Jepang dan Indonesia.
+  - Teks Jepang diambil dari `hira`, fallback ke `kanji` bila `hira` kosong.
+  - Teks Indonesia diambil dari `arti`.
+- Generate bisa per item atau semua item dalam lesson yang sedang dipilih. **Semua Lesson** berarti seluruh kanji lesson.
+- Download menggabungkan semua audio yang sudah siap untuk lesson aktif (atau semua lesson bila **Semua Lesson** dipilih), urut Jepang lalu Indonesia per entri.
+- Tabel menampilkan status audio (`Siap` / `Belum` / `Gagal`); tombol putar aktif hanya saat audio siap. Admin bisa membuat ulang audio lewat tombol di kolom Audio.
+- Menghapus kanji atau lesson ikut mengeluarkan item terkait dari antrean player agar tidak memutar audio yang sudah hilang.
+
+### Teknis
+
+- Migrasi `backend/internal/db/migration/0004_kanji_audio.sql` menambah `audio_jp`, `audio_id`, dan `audio_status` ke `kanji_lesson`, plus index `idx_kanji_lesson_audio`.
+- Endpoint baru:
+  - `POST /api/tts/kanji/generate` — body `{ "ids": [...] }`, maksimal 100 ID per request.
+  - `GET /api/kanji-audio/:id/:lang` — menyajikan MP3 (`jp` / `id`).
+  - `POST /api/download/kanji-audio/:lessonId` — gabungan audio; `lessonId=0` berarti semua lesson.
+- File audio memakai nama `kanji-{id}-{lang}.mp3` di folder `storage/audio`, terpisah dari audio kosakata agar ID yang sama tidak bertabrakan.
+- `backend/internal/services/kanji_audio.go` menangani generate, fallback teks, penyimpanan atomik, cleanup saat gagal, dan penyajian file.
+- `backend/internal/services/kanji_audio_merge.go` menggabungkan audio siap dengan `ffmpeg concat`.
+- Frontend: `kanji-audio-generation.svelte.js` mengatur progres generate per item, `kanji-lesson-store.svelte.js` menyimpan jumlah audio siap + `applyGenerated`, dan `player-tracks.js` memakai `audio.jp` / `audio.id` (URL relatif diprefiks `API_BASE_URL`) sehingga player bisa memutar audio kanji maupun kosakata.
+
+### Pengujian
+
+- `go test ./...` lolos, termasuk test generate dua bahasa, fallback `hira` → `kanji`, cleanup saat gagal, validasi merge, serta endpoint generate/serve kanji.
+- `npm run build` lolos.
+- Verifikasi live: migrasi `0004_kanji_audio.sql` diterapkan, generate item `13` menghasilkan `/api/kanji-audio/13/jp` + `/id` dengan status `ready`, file MP3 valid, dan download gabungan lesson `5` menghasilkan MP3 lewat `ffmpeg`.
+
 ## Status Roadmap
 
 | # | Modul | Bab | Status | Hasil utama |
@@ -310,8 +341,12 @@ ngrok http 5173
 | `frontend/src/components/ubah-kata/VerbFormResult.svelte` | Hasil generik |
 | `frontend/src/routes/Kanji.svelte` | Host tab **Kanji dari Bab** & **Kanji Lesson** |
 | `frontend/src/components/kanji/KanjiBabPanel.svelte` | Panel rekap kanji dari kosakata bab |
-| `frontend/src/components/kanji/KanjiLessonPanel.svelte` | Panel bank kanji lesson (CRUD + import) |
+| `frontend/src/components/kanji/KanjiLessonPanel.svelte` | Panel bank kanji lesson (CRUD + import + audio) |
 | `frontend/src/components/kanji/KanjiFlashcards.svelte` | Flashcard otomatis untuk kedua sub-menu |
+| `frontend/src/lib/kanji-audio-generation.svelte.js` | State & progres generate audio kanji lesson |
 | `backend/internal/handlers/kanji_lesson.go` | Endpoint `/api/kanji-lessons` |
+| `backend/internal/services/kanji_audio.go` | Generate & sajikan audio kanji lesson |
+| `backend/internal/services/kanji_audio_merge.go` | Gabung audio siap per lesson |
 | `backend/internal/db/migration/0002_kanji_lesson.sql` | Skema tabel `kanji_lesson` |
+| `backend/internal/db/migration/0004_kanji_audio.sql` | Kolom & index audio kanji lesson |
 | `backend/internal/services/dictionary.go` | Perbaikan query kamus (`strings.Clone`) |

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 
 	"tts-jpn/internal/models"
 )
@@ -26,6 +27,9 @@ SELECT
 	k.hira,
 	k.romaji,
 	k.arti,
+	k.audio_jp,
+	k.audio_id,
+	k.audio_status,
 	k.created_at,
 	k.updated_at
 FROM kanji_lesson k
@@ -89,16 +93,25 @@ func (r *KanjiLessonRepository) Get(ctx context.Context, id int64) (models.Kanji
 
 // Create inserts a lesson entry and returns it with its generated ID.
 func (r *KanjiLessonRepository) Create(ctx context.Context, item models.KanjiLesson) (models.KanjiLesson, error) {
+	status := item.AudioStatus
+	if status == "" {
+		status = models.AudioStatusPending
+	}
+
 	result, err := r.db.ExecContext(
 		ctx,
 		`INSERT INTO kanji_lesson (
-			lesson_id, kanji, hira, romaji, arti, created_at, updated_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+			lesson_id, kanji, hira, romaji, arti,
+			audio_jp, audio_id, audio_status, created_at, updated_at
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		item.LessonID,
 		item.Kanji,
 		item.Hira,
 		item.Romaji,
 		item.Arti,
+		item.Audio.JP,
+		item.Audio.ID,
+		string(status),
 		formatTime(item.CreatedAt),
 		formatTime(item.UpdatedAt),
 	)
@@ -112,6 +125,7 @@ func (r *KanjiLessonRepository) Create(ctx context.Context, item models.KanjiLes
 	}
 
 	item.ID = id
+	item.AudioStatus = status
 	return item, nil
 }
 
@@ -141,6 +155,36 @@ func (r *KanjiLessonRepository) Update(ctx context.Context, item models.KanjiLes
 	return affected > 0, nil
 }
 
+// UpdateAudio replaces the generated audio fields for one lesson entry.
+func (r *KanjiLessonRepository) UpdateAudio(
+	ctx context.Context,
+	id int64,
+	audio models.Audio,
+	status models.AudioStatus,
+	updatedAt time.Time,
+) (bool, error) {
+	result, err := r.db.ExecContext(
+		ctx,
+		`UPDATE kanji_lesson
+		SET audio_jp = ?, audio_id = ?, audio_status = ?, updated_at = ?
+		WHERE id = ?`,
+		audio.JP,
+		audio.ID,
+		string(status),
+		formatTime(updatedAt),
+		id,
+	)
+	if err != nil {
+		return false, fmt.Errorf("update kanji lesson audio %d: %w", id, err)
+	}
+
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return false, fmt.Errorf("read updated kanji lesson audio rows: %w", err)
+	}
+	return affected > 0, nil
+}
+
 // Delete removes one lesson entry.
 func (r *KanjiLessonRepository) Delete(ctx context.Context, id int64) (bool, error) {
 	result, err := r.db.ExecContext(ctx, `DELETE FROM kanji_lesson WHERE id = ?`, id)
@@ -157,7 +201,8 @@ func (r *KanjiLessonRepository) Delete(ctx context.Context, id int64) (bool, err
 
 func scanKanjiLesson(rows *sql.Rows) (models.KanjiLesson, error) {
 	var item models.KanjiLesson
-	var createdAt, updatedAt string
+	var audioJP, audioID sql.NullString
+	var audioStatus, createdAt, updatedAt string
 
 	if err := rows.Scan(
 		&item.ID,
@@ -167,11 +212,24 @@ func scanKanjiLesson(rows *sql.Rows) (models.KanjiLesson, error) {
 		&item.Hira,
 		&item.Romaji,
 		&item.Arti,
+		&audioJP,
+		&audioID,
+		&audioStatus,
 		&createdAt,
 		&updatedAt,
 	); err != nil {
 		return models.KanjiLesson{}, fmt.Errorf("scan kanji lesson: %w", err)
 	}
+
+	if audioJP.Valid {
+		value := audioJP.String
+		item.Audio.JP = &value
+	}
+	if audioID.Valid {
+		value := audioID.String
+		item.Audio.ID = &value
+	}
+	item.AudioStatus = models.AudioStatus(audioStatus)
 
 	parsedCreatedAt, err := parseTime(createdAt)
 	if err != nil {

@@ -88,16 +88,25 @@ func run() error {
 		services.NewKanjiLessonService(kanjiLessonRepo, lessonRepo),
 	)
 	lessonHandler := handlers.NewLessonHandler(services.NewLessonService(lessonRepo))
+	audioSynth := services.NewEdgeTTS(cfg.TTSTimeout)
 	audioService := services.NewAudioService(
 		kosakataRepo,
-		services.NewEdgeTTS(cfg.TTSTimeout),
+		audioSynth,
 		cfg.StoragePath,
 		cfg.TTSVoiceJP,
 		cfg.TTSVoiceID,
 	)
-	ttsHandler := handlers.NewTTSHandler(audioService)
+	kanjiAudioService := services.NewKanjiAudioService(
+		kanjiLessonRepo,
+		audioSynth,
+		cfg.StoragePath,
+		cfg.TTSVoiceJP,
+		cfg.TTSVoiceID,
+	)
+	ttsHandler := handlers.NewTTSHandler(audioService, kanjiAudioService)
 	exportHandler := handlers.NewExportHandler(
 		services.NewAudioMergeService(kosakataRepo, babRepo, cfg.StoragePath),
+		services.NewKanjiAudioMergeService(kanjiLessonRepo, lessonRepo, cfg.StoragePath),
 		services.NewKosakataService(kosakataRepo, babRepo),
 		services.NewBabService(babRepo),
 	)

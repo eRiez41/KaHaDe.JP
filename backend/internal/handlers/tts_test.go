@@ -88,6 +88,75 @@ func TestTTSGenerateAndServeAudio(t *testing.T) {
 	}
 }
 
+func TestKanjiTTSGenerateAndServeAudio(t *testing.T) {
+	synth := &stubSynth{}
+	app := newTestApp(t, synth)
+
+	status, payload := doJSON(t, app, http.MethodPost, "/api/lessons", map[string]string{"nama": "Lesson Audio"})
+	if status != http.StatusCreated {
+		t.Fatalf("create lesson status = %d, body = %s", status, payload)
+	}
+	lesson := decode[models.Lesson](t, payload)
+
+	status, payload = doJSON(t, app, http.MethodPost, "/api/kanji-lessons", map[string]any{
+		"lessonId": lesson.Data.ID,
+		"kanji":    "学校",
+		"hira":     "がっこう",
+		"arti":     "sekolah",
+	})
+	if status != http.StatusCreated {
+		t.Fatalf("create kanji lesson status = %d, body = %s", status, payload)
+	}
+	item := decode[models.KanjiLesson](t, payload)
+
+	status, payload = doJSON(t, app, http.MethodPost, "/api/tts/kanji/generate", map[string][]int64{
+		"ids": {item.Data.ID},
+	})
+	if status != http.StatusCreated {
+		t.Fatalf("generate status = %d, body = %s", status, payload)
+	}
+	result := decode[services.KanjiGenerateResult](t, payload)
+	if !result.Success || len(result.Data.Failed) != 0 || len(result.Data.Items) != 1 {
+		t.Fatalf("unexpected generate response: %+v", result)
+	}
+	generated := result.Data.Items[0]
+	if generated.AudioStatus != models.AudioStatusReady || generated.Audio.JP == nil || generated.Audio.ID == nil {
+		t.Fatalf("unexpected generated item: %+v", generated)
+	}
+	if !strings.HasPrefix(*generated.Audio.JP, "/api/kanji-audio/") {
+		t.Errorf("audio jp url = %q", *generated.Audio.JP)
+	}
+	if synth.calls != 2 {
+		t.Fatalf("synth calls = %d, want 2", synth.calls)
+	}
+
+	resp := doRequest(t, app, http.MethodGet, *generated.Audio.JP)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("read audio body: %v", err)
+	}
+	_ = resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("audio status = %d, body = %s", resp.StatusCode, body)
+	}
+	if !strings.Contains(resp.Header.Get("Content-Type"), "audio/mpeg") {
+		t.Errorf("content type = %q", resp.Header.Get("Content-Type"))
+	}
+	if string(body) != "mp3-ja-JP-NanamiNeural-がっこう" {
+		t.Errorf("audio body = %q", body)
+	}
+
+	status, payload = doJSON(t, app, http.MethodGet, "/api/kanji-audio/"+itoa(item.Data.ID)+"/fr", nil)
+	if status != http.StatusBadRequest {
+		t.Fatalf("invalid language status = %d, body = %s", status, payload)
+	}
+
+	status, payload = doJSON(t, app, http.MethodGet, "/api/kanji-audio/9999/jp", nil)
+	if status != http.StatusNotFound {
+		t.Fatalf("missing audio status = %d, body = %s", status, payload)
+	}
+}
+
 func TestTTSGenerateRejectsEmptyIDs(t *testing.T) {
 	app := newTestApp(t, &stubSynth{})
 

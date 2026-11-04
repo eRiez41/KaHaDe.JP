@@ -58,20 +58,32 @@ func newTestApp(t *testing.T, synth ...services.Synthesizer) *fiber.App {
 		ttsSynth = synth[0]
 	}
 
+	storagePath := t.TempDir()
+
 	app := fiber.New(fiber.Config{ErrorHandler: middleware.ErrorHandler})
 	RegisterRoutes(
 		app.Group("/api"),
 		NewBabHandler(services.NewBabService(babRepo)),
 		NewKosakataHandler(services.NewKosakataService(kosakataRepo, babRepo)),
-		NewTTSHandler(services.NewAudioService(
-			kosakataRepo,
-			ttsSynth,
-			t.TempDir(),
-			"ja-JP-NanamiNeural",
-			"id-ID-GadisNeural",
-		)),
+		NewTTSHandler(
+			services.NewAudioService(
+				kosakataRepo,
+				ttsSynth,
+				storagePath,
+				"ja-JP-NanamiNeural",
+				"id-ID-GadisNeural",
+			),
+			services.NewKanjiAudioService(
+				kanjiLessonRepo,
+				ttsSynth,
+				storagePath,
+				"ja-JP-NanamiNeural",
+				"id-ID-GadisNeural",
+			),
+		),
 		NewExportHandler(
-			services.NewAudioMergeService(kosakataRepo, db.NewBabRepository(sqlDB), t.TempDir()),
+			services.NewAudioMergeService(kosakataRepo, db.NewBabRepository(sqlDB), storagePath),
+			services.NewKanjiAudioMergeService(kanjiLessonRepo, lessonRepo, storagePath),
 			services.NewKosakataService(kosakataRepo, db.NewBabRepository(sqlDB)),
 			services.NewBabService(db.NewBabRepository(sqlDB)),
 		),

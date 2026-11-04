@@ -35,6 +35,14 @@ class KanjiLessonStore {
     )
   }
 
+  get audioReady() {
+    return this.filtered.filter((item) => item.audioStatus === 'ready').length
+  }
+
+  get scopedAudioReady() {
+    return this.scoped.filter((item) => item.audioStatus === 'ready').length
+  }
+
   get totalPages() {
     return Math.max(1, Math.ceil(this.filtered.length / this.pageSize))
   }
@@ -68,6 +76,27 @@ class KanjiLessonStore {
   clampPage() {
     if (this.page > this.totalPages) {
       this.page = this.totalPages
+    }
+  }
+
+  applyGenerated(generatedItems) {
+    if (!Array.isArray(generatedItems) || generatedItems.length === 0) {
+      return
+    }
+
+    const items = [...this.items]
+    let changed = false
+
+    for (const generated of generatedItems) {
+      const index = items.findIndex((item) => item.id === generated.id)
+      if (index !== -1) {
+        items[index] = generated
+        changed = true
+      }
+    }
+
+    if (changed) {
+      this.items = items
     }
   }
 

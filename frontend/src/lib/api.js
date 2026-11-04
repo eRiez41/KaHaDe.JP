@@ -60,27 +60,35 @@ export const getHealth = () => request('/api/health')
 export const lookupWord = (q) => request(`/api/lookup?q=${encodeURIComponent(q)}`)
 
 export const generateTTS = (ids) => request('/api/tts/generate', { method: 'POST', body: { ids } })
+export const generateKanjiTTS = (ids) =>
+  request('/api/tts/kanji/generate', { method: 'POST', body: { ids } })
 
 export const audioURL = (id, lang) => `${API_URL}/api/audio/${id}/${lang}`
+export const kanjiAudioURL = (id, lang) => `${API_URL}/api/kanji-audio/${id}/${lang}`
+
+async function downloadAudio(path, fallbackName) {
+  const res = await fetch(`${API_URL}${path}`, { method: 'POST' })
+  if (!res.ok) {
+    let msg = 'Gagal download audio gabungan'
+    try {
+      const data = await res.json()
+      msg = data?.error?.message || msg
+    } catch {
+      // ignore
+    }
+    throw new ApiError(msg, 'DOWNLOAD_ERROR', res.status)
+  }
+  const blob = await res.blob()
+  const disposition = res.headers.get('Content-Disposition') || ''
+  const filename = filenameFromDisposition(disposition, fallbackName)
+  downloadBlob(blob, filename)
+  return filename
+}
+
 export const downloadBabAudio = (babId) =>
-  fetch(`${API_URL}/api/download/audio/${babId}`, { method: 'POST' })
-    .then(async (res) => {
-      if (!res.ok) {
-        let msg = 'Gagal download audio gabungan'
-        try {
-          const data = await res.json()
-          msg = data?.error?.message || msg
-        } catch {
-          // ignore
-        }
-        throw new ApiError(msg, 'DOWNLOAD_ERROR', res.status)
-      }
-      const blob = await res.blob()
-      const disposition = res.headers.get('Content-Disposition') || ''
-      const filename = filenameFromDisposition(disposition, `bab-${babId}-audio.mp3`)
-      downloadBlob(blob, filename)
-      return filename
-    })
+  downloadAudio(`/api/download/audio/${babId}`, `bab-${babId}-audio.mp3`)
+export const downloadKanjiLessonAudio = (lessonId) =>
+  downloadAudio(`/api/download/kanji-audio/${lessonId}`, `kanji-lesson-${lessonId}-audio.mp3`)
 
 export async function exportBab(babId) {
   let response

@@ -1,4 +1,4 @@
-import { audioURL } from './api.js'
+import { API_BASE_URL, audioURL } from './api.js'
 
 export const PAGE_VERSION = Date.now()
 
@@ -16,8 +16,11 @@ export function notifyPlayer(message) {
 
 function resolveSource(item, lang) {
   const provided = lang === 'jp' ? item.audio?.jp : item.audio?.id
-  if (provided && /^https?:\/\//i.test(provided)) {
-    return provided
+  if (provided) {
+    if (/^https?:\/\//i.test(provided)) {
+      return provided
+    }
+    return `${API_BASE_URL}${provided}`
   }
   return audioURL(item.id, lang)
 }

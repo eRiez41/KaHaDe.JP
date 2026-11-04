@@ -42,8 +42,11 @@ func RegisterRoutes(
 	api.Delete("/lessons/:id", lesson.Delete)
 
 	api.Post("/download/audio/:id", export.DownloadBabAudio)
+	api.Post("/download/kanji-audio/:lessonId", export.DownloadKanjiLessonAudio)
 	api.Get("/export/bab/:id", export.ExportBabJSON)
 
 	api.Post("/tts/generate", tts.Generate)
+	api.Post("/tts/kanji/generate", tts.GenerateKanji)
 	api.Get("/audio/:id/:lang", tts.Audio)
+	api.Get("/kanji-audio/:id/:lang", tts.KanjiAudio)
 }

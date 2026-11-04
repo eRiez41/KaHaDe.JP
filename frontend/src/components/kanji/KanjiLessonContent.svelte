@@ -13,11 +13,14 @@
     isAdmin = false,
     showLesson = false,
     search = '',
+    generatingIds = new Set(),
     onRetry,
     onCreateLesson,
     onCreate,
     onImport,
     onClearSearch,
+    onPlay,
+    onGenerate,
     onEdit,
     onDelete,
     onPage,
@@ -79,6 +82,9 @@
     {totalPages}
     {isAdmin}
     showLesson={showLesson}
+    {generatingIds}
+    onPlay={onPlay}
+    onGenerate={onGenerate}
     onEdit={onEdit}
     onDelete={onDelete}
     onPage={onPage}

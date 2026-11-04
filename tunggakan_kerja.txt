@@ -6,7 +6,7 @@ File ini adalah catatan kerja yang WAJIB di-update oleh agent.
 Berbeda dari histori.md (yang mencatat yang SUDAH selesai),
 file ini mencatat yang BELUM / SEDANG dikerjakan.
 
-Terakhir diperbarui: 1 November 2026
+Terakhir diperbarui: 4 November 2026
 
 ============================================================
 ATURAN UPDATE
@@ -47,35 +47,31 @@ ATURAN UPDATE
 (sudah selesai secara teknis, tapi belum di-commit/push —
 lihat push.md untuk flow tanya-jawab)
 
-- [ ] Grup Lesson untuk Kanji Lesson (Lesson 1..N)
-  → File terdampak: backend/internal/db/migration/0002_kanji_lesson.sql,
-                    backend/internal/db/migration/0003_lesson_group.sql,
+- [ ] Audio untuk sub-menu Kanji Lesson (mirip menu Bab)
+  → File terdampak: backend/internal/db/migration/0004_kanji_audio.sql,
                     backend/internal/models/kanji_lesson.go,
-                    backend/internal/models/lesson.go,
                     backend/internal/db/kanji_lesson.go,
-                    backend/internal/db/lesson.go,
-                    backend/internal/services/kanji_lesson.go,
-                    backend/internal/services/lesson.go,
-                    backend/internal/services/validation.go,
-                    backend/internal/handlers/kanji_lesson.go,
-                    backend/internal/handlers/lesson.go,
-                    backend/internal/handlers/kanji_lesson_test.go,
-                    backend/internal/handlers/bab_test.go,
+                    backend/internal/services/kanji_audio.go,
+                    backend/internal/services/kanji_audio_merge.go,
+                    backend/internal/services/kanji_audio_test.go,
+                    backend/internal/handlers/tts.go,
+                    backend/internal/handlers/tts_test.go,
+                    backend/internal/handlers/export.go,
                     backend/internal/handlers/routes.go,
+                    backend/internal/handlers/bab_test.go,
                     backend/main.go,
                     frontend/src/lib/api.js,
-                    frontend/src/lib/import.js,
-                    frontend/src/lib/kanji-lesson-actions.js,
+                    frontend/src/lib/player-tracks.js,
+                    frontend/src/lib/kanji-audio-generation.svelte.js,
                     frontend/src/lib/kanji-lesson-store.svelte.js,
-                    frontend/src/components/ImportUploadStep.svelte,
-                    frontend/src/components/ImportPreviewStep.svelte,
-                    frontend/src/components/ImportResultStep.svelte,
-                    frontend/src/components/kanji/,
-                    frontend/src/routes/Kanji.svelte,
+                    frontend/src/components/kanji/KanjiLessonPanel.svelte,
+                    frontend/src/components/kanji/KanjiLessonToolbar.svelte,
+                    frontend/src/components/kanji/KanjiLessonContent.svelte,
+                    frontend/src/components/kanji/KanjiLessonTable.svelte,
                     histori.md
-  → Catatan: user membuat/memilih lesson dulu, lalu menambah atau import kanji ke dalamnya. Flashcard mengikuti lesson aktif.
-  → Verifikasi: `go build`, `go vet`, `go test ./...`, `npm run build` lolos; uji API + UI (Chrome headless/CDP) lolos; layout mobile 390 px tidak meluber. Data uji sudah dibersihkan.
-  → Menunggu: user approve untuk commit + push.
+  → Catatan: Play All, Generate All (admin), Download Audio, dan putar/generate per baris. Audio Jepang dari `hira` (fallback `kanji`), Indonesia dari `arti`. File `kanji-{id}-{lang}.mp3` terpisah dari audio kosakata; download `lessonId=0` berarti semua lesson.
+  → Verifikasi: `go test ./...` dan `npm run build` lolos; migrasi `0004_kanji_audio.sql` diterapkan; generate item `13` live menghasilkan audio `ready`; GET MP3 dan download gabungan lesson `5` valid.
+  → Menunggu: user approve untuk commit + push (semua perubahan masih uncommitted).
 
 ============================================================
 🚧 BLOCKER / CATATAN
