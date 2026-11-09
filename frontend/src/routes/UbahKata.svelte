@@ -1,159 +1,159 @@
 <script>
+  import ConjugationTabs from '../components/ubah-kata/ConjugationTabs.svelte'
+  import GroupedTable from '../components/ubah-kata/GroupedTable.svelte'
+  import InputSection from '../components/ubah-kata/InputSection.svelte'
+  import MainTable from '../components/ubah-kata/MainTable.svelte'
+  import PinnedTable from '../components/ubah-kata/PinnedTable.svelte'
+  import SummaryCard from '../components/ubah-kata/SummaryCard.svelte'
+  import { analyzeWord } from '../lib/conjugation/index.js'
   import { toast } from '../lib/toast.svelte.js'
+  import '../styles/ubah-kata.css'
 
-  // Urutan disesuaikan dengan alur belajar Minna no Nihongo (Bab 8 → Bab 50).
-  // Tandai `soon: true` untuk item yang belum siap; sisanya otomatis bisa dipakai.
-  const items = [
-    {
-      id: 'i-kei',
-      title: 'Kata Sifat -i (い形容詞): ～くて, ～かった, ～くない',
-      chapter: 'Bab 8, 12, 16',
-      desc: 'Cara menyambungkan kata sifat -i, mengubahnya ke bentuk lampau (sudah), dan bentuk negatif (tidak).',
-    },
-    {
-      id: 'na-kei',
-      title: 'Kata Sifat -na (な形容詞): ～で, ～だった, ～じゃない',
-      chapter: 'Bab 8, 12, 16',
-      desc: 'Cara menyambungkan kata sifat -na, mengubahnya ke bentuk lampau (sudah), dan bentuk negatif (tidak).',
-    },
-    {
-      id: 'masu-te',
-      title: 'Bentuk Masu (ます) → Bentuk Te (て形 / Te-kei)',
-      chapter: 'Bab 14',
-      desc: 'Bentuk dasar untuk menyambungkan kalimat, meminta tolong (～てください), atau menyatakan sedang melakukan sesuatu.',
-    },
-    {
-      id: 'masu-nai',
-      title: 'Bentuk Masu (ます) → Bentuk Negatif (ない形 / Nai-kei)',
-      chapter: 'Bab 17',
-      desc: 'Bentuk negatif standar (tidak melakukan). Sering dipakai untuk larangan (～ないでください) atau sebelum pola kalimat tertentu.',
-    },
-    {
-      id: 'masu-jisho',
-      title: 'Bentuk Masu (ます) ↔ Bentuk Kamus (辞書形 / Jisho-kei)',
-      chapter: 'Bab 18',
-      desc: 'Cara mengubah kata kerja dari bentuk sopan ke bentuk dasar kamus, dan sebaliknya. Termasuk pengenalan 3 golongan kata kerja.',
-    },
-    {
-      id: 'masu-ta',
-      title: 'Bentuk Masu (ます) → Bentuk Lampau (た形 / Ta-kei)',
-      chapter: 'Bab 19',
-      desc: 'Bentuk sederhana untuk menyatakan kejadian yang sudah selesai atau pernah dialami di masa lalu.',
-    },
-    {
-      id: 'masu-tara',
-      title: 'Bentuk Masu (ます) → Pengandaian (～たら / -tara)',
-      chapter: 'Bab 25',
-      desc: 'Pola "jika..." atau "kalau...". Digunakan untuk menyatakan syarat atau kejadian yang mungkin terjadi di masa depan.',
-    },
-    {
-      id: 'masu-kanou',
-      title: 'Bentuk Masu (ます) → Bentuk Bisa (可能形 / Kanou-kei)',
-      chapter: 'Bab 27',
-      desc: 'Mengubah kata kerja untuk menyatakan kemampuan ("bisa melakukan") atau kemungkinan ("bisa terjadi").',
-    },
-    {
-      id: 'masu-ishou',
-      title: 'Bentuk Masu (ます) → Bentuk Ajakan (意向形 / Ikou-kei)',
-      chapter: 'Bab 31',
-      desc: 'Digunakan untuk menyatakan niat diri sendiri ("saya akan...") atau mengajak orang lain ("mari kita...").',
-    },
-    {
-      id: 'masu-meirei',
-      title: 'Bentuk Masu (ます) → Bentuk Perintah (命令形 / Meirei-kei)',
-      chapter: 'Bab 33',
-      desc: 'Bentuk imperatif untuk memberi perintah tegas, instruksi langsung, atau peringatan ("Lakukan!").',
-    },
-    {
-      id: 'masu-eba',
-      title: 'Bentuk Masu (ます) → Pengandaian Murni (～えば / -eba)',
-      chapter: 'Bab 35',
-      desc: 'Pola "jika..." yang menekankan syarat mutlak. Jika syaratnya terpenuhi, hasilnya pasti terjadi.',
-    },
-    {
-      id: 'masu-ukemi',
-      title: 'Bentuk Masu (ます) → Bentuk Pasif (受身形 / Ukemi-kei)',
-      chapter: 'Bab 37',
-      desc: 'Menyatakan subjek "dikenai" tindakan oleh orang lain ("di-"). Bisa juga untuk kalimat yang merugikan subjek.',
-    },
-    {
-      id: 'masu-shieki',
-      title: 'Bentuk Masu (ます) → Bentuk Menyuruh (使役形 / Shieki-kei)',
-      chapter: 'Bab 48',
-      desc: 'Menyatakan bahwa subjek membuat, menyuruh, atau membiarkan orang lain melakukan sesuatu.',
-    },
-    {
-      id: 'masu-shiekiukemi',
-      title: 'Bentuk Masu (ます) → Pasif-Kausatif (使役受身形 / Shieki-Ukemi-kei)',
-      chapter: 'Bab 48',
-      desc: 'Gabungan bentuk suruh dan pasif. Menyatakan perasaan "dipaksa" atau "dibuat melakukan" sesuatu oleh orang lain.',
-    },
-    {
-      id: 'keigo',
-      title: 'Bahasa Sopan (敬語 / Keigo): Sonkeigo & Kenjougo',
-      chapter: 'Bab 49–50',
-      desc: 'Pengenalan bahasa hormat (尊敬語 / Sonkeigo) untuk orang lain, dan bahasa rendah (謙譲語 / Kenjougo) untuk merendahkan diri sendiri.',
-    },
-  ]
+  const MAX_PINS = 10
+  const DEFAULT_OPEN = []
 
-  function handleClick(item) {
-    if (item.soon) {
-      toast.info('Fitur ini segera hadir')
+  let input = $state('')
+  let loading = $state(false)
+  let error = $state('')
+  let result = $state(null)
+  let activeIndex = $state(0)
+  let pinned = $state({})
+  let openGroups = $state({})
+
+  const active = $derived(result?.candidates?.[activeIndex] ?? null)
+  const activeKey = $derived(`${activeIndex}`)
+  const pinnedIds = $derived(active ? (pinned[activeKey] ?? []) : [])
+  const pinnedRows = $derived(
+    active ? active.patterns.filter((row) => pinnedIds.includes(row.id)) : [],
+  )
+  const openNames = $derived(active ? (openGroups[activeKey] ?? DEFAULT_OPEN) : DEFAULT_OPEN)
+  const mainForms = $derived(new Set((active?.primary ?? []).map((row) => row.jp)))
+  const availableGroups = $derived.by(() => {
+    if (!active) return []
+    const pinnedSet = new Set(pinnedIds)
+    return active.groups
+      .map((group) => ({
+        name: group.name,
+        rows: group.rows.filter(
+          (row) => !pinnedSet.has(row.id) && !mainForms.has(row.jp),
+        ),
+      }))
+      .filter((group) => group.rows.length > 0)
+  })
+
+  async function runAnalyze(raw) {
+    const value = (raw ?? input).trim()
+    if (!value) {
+      error = 'Masukkan kata yang ingin dianalisis.'
       return
     }
-    window.location.hash = `#ubah-kata/${item.id}`
+    if (value.length > 50) {
+      error = 'Input terlalu panjang. Maksimal 50 karakter.'
+      return
+    }
+
+    error = ''
+    loading = true
+    try {
+      const next = await analyzeWord(value)
+      result = next
+      activeIndex = next.active ?? 0
+      pinned = {}
+      openGroups = {}
+      requestAnimationFrame(() => {
+        document.getElementById('uk-result')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      })
+    } catch (e) {
+      result = null
+      error = e?.message || 'Gagal menganalisis kata.'
+      toast.error(error)
+    } finally {
+      loading = false
+    }
+  }
+
+  function useExample(example) {
+    input = example
+    runAnalyze(example)
+  }
+
+  function selectCandidate(index) {
+    activeIndex = index
+  }
+
+  function isPinned(id) {
+    return pinnedIds.includes(id)
+  }
+
+  function togglePin(id) {
+    const current = pinned[activeKey] ?? []
+    const next = current.includes(id)
+      ? current.filter((item) => item !== id)
+      : [...current, id]
+    if (next.length > MAX_PINS) {
+      toast.info(`Maksimal ${MAX_PINS} bentuk boleh disematkan.`)
+      return
+    }
+    pinned = { ...pinned, [activeKey]: next }
+  }
+
+  function isOpen(name) {
+    return openNames.includes(name)
+  }
+
+  function toggleGroup(name) {
+    const current = openGroups[activeKey] ?? DEFAULT_OPEN
+    const next = current.includes(name)
+      ? current.filter((item) => item !== name)
+      : [...current, name]
+    openGroups = { ...openGroups, [activeKey]: next }
   }
 </script>
 
-<section class="space-y-6">
-  <header class="space-y-2">
+<section class="uk-page">
+  <header class="mb-6 space-y-2">
     <h1 class="text-headline-lg font-bold tracking-tight">Perubahan Kata</h1>
-    <p class="text-body-md text-on-surface-variant">
-      Peta Jalan Konjugasi Bahasa Jepang · Minna no Nihongo
-    </p>
-    <p class="text-label-md text-on-surface-variant">
-      Urutan disesuaikan dengan alur belajar Minna no Nihongo. Klik kartu untuk mulai berlatih.
+    <p class="max-w-2xl text-body-md text-on-surface-variant">
+      Masukkan satu kata Jepang dalam bentuk apa pun. Sistem mendeteksi kelas kata dan golongan
+      verba, lalu menampilkan bentuk sopan, biasa, serta pola Minna no Nihongo Bab 1–20.
     </p>
   </header>
 
-  <ol class="grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
-    {#each items as item, i (item.id)}
-      <li class="h-full">
-        <button
-          type="button"
-          class="card card-hover flex h-full w-full items-start gap-3 p-4 text-left {item.soon
-            ? 'opacity-90'
-            : 'border-2 border-outline shadow-level-2'}"
-          onclick={() => handleClick(item)}
-        >
-          <span
-            class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-surface-high text-label-md font-bold text-on-surface-variant"
-          >
-            {i + 1}
-          </span>
-          <span class="min-w-0 flex-1 space-y-1">
-            <span class="flex items-start justify-between gap-2">
-              <span class="text-title-md font-bold leading-snug">{item.title}</span>
-              {#if item.soon}
-                <span class="chip shrink-0 bg-surface-high text-on-surface-variant">
-                  <svg viewBox="0 0 20 20" class="h-3.5 w-3.5" fill="currentColor" aria-hidden="true">
-                    <path
-                      fill-rule="evenodd"
-                      d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  Segera
-                </span>
-              {/if}
-            </span>
-            <span class="block text-label-md font-semibold uppercase tracking-wide text-primary">
-              {item.chapter}
-            </span>
-            <span class="block text-body-md text-on-surface-variant leading-relaxed">{item.desc}</span>
-          </span>
-        </button>
-      </li>
-    {/each}
-  </ol>
+  <InputSection
+    bind:value={input}
+    {loading}
+    onAnalyze={() => runAnalyze()}
+    onExample={useExample}
+  />
+
+  {#if error}
+    <div class="uk-error" role="alert">{error}</div>
+  {/if}
+
+  {#if loading}
+    <div class="uk-loading" role="status">Mencari kata di kamus…</div>
+  {/if}
+
+  {#if result?.candidates?.length}
+    <div id="uk-result">
+      <ConjugationTabs
+        candidates={result.candidates}
+        active={activeIndex}
+        onChange={selectCandidate}
+      />
+
+      {#if active}
+        <SummaryCard analysis={active} input={result.input} />
+        <MainTable rows={active.primary} meaning={active.meaning} classType={active.classType} />
+        <PinnedTable rows={pinnedRows} onUnpin={togglePin} />
+        <GroupedTable
+          groups={availableGroups}
+          isOpen={isOpen}
+          isPinned={isPinned}
+          onToggleGroup={toggleGroup}
+          onPin={togglePin}
+        />
+      {/if}
+    </div>
+  {/if}
 </section>

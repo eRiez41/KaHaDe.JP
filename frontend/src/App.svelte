@@ -14,7 +14,6 @@
   import Kanji from './routes/Kanji.svelte'
   import Settings from './routes/Settings.svelte'
   import UbahKata from './routes/UbahKata.svelte'
-  import UbahKataDetail from './routes/UbahKataDetail.svelte'
   import { auth, initAuth, login, logout } from './lib/auth.svelte.js'
   import { settings } from './lib/settings.js'
 
@@ -43,24 +42,6 @@
         ],
   )
 
-  const UB_KATA_SUBS = new Set([
-    'masu-te',
-    'masu-nai',
-    'masu-jisho',
-    'masu-ta',
-    'masu-tara',
-    'masu-kanou',
-    'masu-ishou',
-    'masu-meirei',
-    'masu-eba',
-    'masu-ukemi',
-    'masu-shieki',
-    'masu-shiekiukemi',
-    'masu-keigo',
-    'i-kei',
-    'na-kei',
-  ])
-
   function parseRoute() {
     const raw = window.location.hash.replace(/^#\/?/, '')
     const parts = raw.split('/')
@@ -69,9 +50,6 @@
 
     if (name === 'bab' && param) {
       return { name: 'bab-detail', id: param }
-    }
-    if (name === 'ubah-kata' && UB_KATA_SUBS.has(param)) {
-      return { name: 'ubah-kata-detail', sub: param }
     }
     if (name === 'settings') {
       return auth.isAdmin ? { name: 'settings', id: null } : { name: 'dashboard', id: null }
@@ -94,10 +72,8 @@
   const Page = $derived(
     route.name === 'settings' ? (auth.isAdmin ? Settings : Dashboard) : routes[route.name] ?? Dashboard,
   )
-  const activeNav = $derived(
-    route.name === 'bab-detail' ? 'bab' : route.name === 'ubah-kata-detail' ? 'ubah-kata' : route.name,
-  )
-  const routeKey = $derived(`${route.name}:${route.id ?? route.sub ?? ''}`)
+  const activeNav = $derived(route.name === 'bab-detail' ? 'bab' : route.name)
+  const routeKey = $derived(`${route.name}:${route.id ?? ''}`)
   const isDark = $derived(
     $settings.theme === 'dark' || ($settings.theme === 'system' && systemDark),
   )
@@ -241,8 +217,6 @@
       <div in:fly={{ y: 6, duration: 200, opacity: 0.9 }}>
         {#if route.name === 'bab-detail'}
           <BabDetail id={route.id} />
-        {:else if route.name === 'ubah-kata-detail'}
-          <UbahKataDetail sub={route.sub} />
         {:else}
           <Page />
         {/if}

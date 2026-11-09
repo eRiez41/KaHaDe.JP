@@ -103,3 +103,131 @@ export function isKnownIchidan(key) {
 export function isSpecialIku(key) {
   return SPECIAL_IKU.has(key)
 }
+
+// ---------------------------------------------------------------------------
+// Dictionary-form exception sets for the v2 conjugation engine.
+// The masu-form sets above stay untouched so the legacy modules keep working.
+// ---------------------------------------------------------------------------
+
+// Godan verbs that end in -ru and look like Ichidan verbs. Kana entries are
+// included because the v2 engine works on readings first.
+export const GODAN_LOOKS_ICHIDAN_KAMUS = new Set([
+  '帰る',
+  'かえる',
+  '入る',
+  'はいる',
+  '走る',
+  'はしる',
+  '切る',
+  'きる',
+  '知る',
+  'しる',
+  '要る',
+  '減る',
+  'へる',
+  '滑る',
+  'すべる',
+  '蹴る',
+  'ける',
+  '混じる',
+  'まじる',
+  '限る',
+  'かぎる',
+  '焦る',
+  'あせる',
+  '握る',
+  'にぎる',
+  '座る',
+  'すわる',
+  '光る',
+  'ひかる',
+  '怒る',
+  'おこる',
+  '困る',
+  'こまる',
+])
+
+// Ichidan verbs whose kana form would otherwise be ambiguous with a Godan verb.
+export const ICHIDAN_KAMUS = new Set([
+  '見る',
+  'みる',
+  '寝る',
+  'ねる',
+  '出る',
+  'でる',
+  '得る',
+  'える',
+  '経る',
+  'へる',
+  '着る',
+  'きる',
+  '似る',
+  'にる',
+  '煮る',
+  'にる',
+  '居る',
+  'いる',
+  '起きる',
+  'おきる',
+  '借りる',
+  'かりる',
+  '浴びる',
+  'あびる',
+  '伸びる',
+  'のびる',
+  '詫びる',
+  'わびる',
+  '信じる',
+  'しんじる',
+  '落ちる',
+  'おちる',
+  '過ぎる',
+  'すぎる',
+  '感じる',
+  'かんじる',
+  '閉じる',
+  'とじる',
+  '降りる',
+  'おりる',
+  '出来る',
+  'できる',
+  '用いる',
+  'もちいる',
+  '飽きる',
+  'あきる',
+  '懲りる',
+  'こりる',
+])
+
+export const ARU_KAMUS = new Set(['ある', '有る'])
+export const IKU_KAMUS = new Set(['行く', 'いく'])
+export const KURU_KAMUS = new Set(['来る', 'くる'])
+export const SURU_KAMUS = new Set(['する', '為る'])
+
+export function isGodanLooksIchidanKamus(key) {
+  return GODAN_LOOKS_ICHIDAN_KAMUS.has(key)
+}
+
+export function isKnownIchidanKamus(key) {
+  return ICHIDAN_KAMUS.has(key)
+}
+
+export function isAruKamus(key) {
+  return ARU_KAMUS.has(key)
+}
+
+export function isIkuKamus(key) {
+  return IKU_KAMUS.has(key)
+}
+
+export function isKuruKamus(key) {
+  return KURU_KAMUS.has(key)
+}
+
+export function isSuruKamus(key) {
+  return SURU_KAMUS.has(key)
+}
+
+export function isSuruCompoundKamus(key) {
+  return key.length > 2 && key.endsWith('する')
+}

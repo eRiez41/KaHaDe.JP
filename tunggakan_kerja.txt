@@ -6,7 +6,7 @@ File ini adalah catatan kerja yang WAJIB di-update oleh agent.
 Berbeda dari histori.md (yang mencatat yang SUDAH selesai),
 file ini mencatat yang BELUM / SEDANG dikerjakan.
 
-Terakhir diperbarui: 4 November 2026
+Terakhir diperbarui: 8 November 2026
 
 ============================================================
 ATURAN UPDATE
@@ -47,31 +47,7 @@ ATURAN UPDATE
 (sudah selesai secara teknis, tapi belum di-commit/push —
 lihat push.md untuk flow tanya-jawab)
 
-- [ ] Audio untuk sub-menu Kanji Lesson (mirip menu Bab)
-  → File terdampak: backend/internal/db/migration/0004_kanji_audio.sql,
-                    backend/internal/models/kanji_lesson.go,
-                    backend/internal/db/kanji_lesson.go,
-                    backend/internal/services/kanji_audio.go,
-                    backend/internal/services/kanji_audio_merge.go,
-                    backend/internal/services/kanji_audio_test.go,
-                    backend/internal/handlers/tts.go,
-                    backend/internal/handlers/tts_test.go,
-                    backend/internal/handlers/export.go,
-                    backend/internal/handlers/routes.go,
-                    backend/internal/handlers/bab_test.go,
-                    backend/main.go,
-                    frontend/src/lib/api.js,
-                    frontend/src/lib/player-tracks.js,
-                    frontend/src/lib/kanji-audio-generation.svelte.js,
-                    frontend/src/lib/kanji-lesson-store.svelte.js,
-                    frontend/src/components/kanji/KanjiLessonPanel.svelte,
-                    frontend/src/components/kanji/KanjiLessonToolbar.svelte,
-                    frontend/src/components/kanji/KanjiLessonContent.svelte,
-                    frontend/src/components/kanji/KanjiLessonTable.svelte,
-                    histori.md
-  → Catatan: Play All, Generate All (admin), Download Audio, dan putar/generate per baris. Audio Jepang dari `hira` (fallback `kanji`), Indonesia dari `arti`. File `kanji-{id}-{lang}.mp3` terpisah dari audio kosakata; download `lessonId=0` berarti semua lesson.
-  → Verifikasi: `go test ./...` dan `npm run build` lolos; migrasi `0004_kanji_audio.sql` diterapkan; generate item `13` live menghasilkan audio `ready`; GET MP3 dan download gabungan lesson `5` valid.
-  → Menunggu: user approve untuk commit + push (semua perubahan masih uncommitted).
+(kosong)
 
 ============================================================
 🚧 BLOCKER / CATATAN
@@ -88,30 +64,3 @@ REFERENSI
 - rules.md        → aturan kerja agent secara umum
 - app.md          → spesifikasi UI/UX & fitur
 - tech-stack.md   → tech stack & library
-
-============================================================
-CONTOH FORMAT (hapus setelah diisi beneran)
-============================================================
-
-🔄 SEDANG DIKERJAKAN:
-- [ ] Tambah endpoint /api/lookup proxy
-  → File terdampak: backend/internal/handlers/dictionary.go,
-                    backend/internal/services/dictionary.go
-  → Catatan: butuh validasi CORS + cache 30 hari
-
-⏳ TUNGGAKAN:
-- [ ] Dialog disambiguasi kana (かえる → 帰る/変える/蛙)
-  → File terdampak: frontend/src/routes/UbahKataDetail.svelte
-  → Catatan: prioritas tinggi, UX core
-
-⏸️ MENUNGGU KONFIRMASI:
-- [ ] Test otomatis Vitest untuk conjugation
-  → File terdampak: frontend/src/lib/conjugation/*.test.js
-  → Catatan: 12 test case lolos, siap commit
-  → Menunggu: user approve untuk commit + push
-
-🚧 BLOCKER:
-- Jisho API CORS gak aktif, harus lewat backend proxy
-  → Solusi: bikin endpoint proxy di Go (sedang dikerjakan)
-
-============================================================

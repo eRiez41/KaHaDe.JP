@@ -1,5 +1,25 @@
 // Sonkeigo/kenjougo pairs that cannot be produced by the regular お〜になる /
 // お〜する pattern. Keys cover both kanji and kana dictionary forms.
+// Kana-only readings of the same pairs. The v2 output never shows kanji, so
+// the engine reads from this table. Keep both tables in sync when adding verbs.
+export const SPECIAL_KEIGO_KANA = {
+  いく: ['いらっしゃる', 'まいる'],
+  くる: ['いらっしゃる', 'まいる'],
+  いる: ['いらっしゃる', 'おる'],
+  たべる: ['めしあがる', 'いただく'],
+  のむ: ['めしあがる', 'いただく'],
+  みる: ['ごらんになる', 'はいけんする'],
+  いう: ['おっしゃる', 'もうす'],
+  きく: ['おききになる', 'うかがう'],
+  あう: ['おあいになる', 'おめにかかる'],
+  しる: ['ごぞんじだ', 'ぞんじる'],
+  おもう: ['おおもいになる', 'ぞんじる'],
+  よむ: ['およみになる', 'はいどくする'],
+  もらう: ['おうけとりになる', 'いただく'],
+  する: ['なさる', 'いたす'],
+  ある: ['ございます', 'ございます'],
+}
+
 export const SPECIAL_KEIGO = {
   行く: ['いらっしゃる', '参る'],
   いく: ['いらっしゃる', '参る'],
